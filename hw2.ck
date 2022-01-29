@@ -3,6 +3,8 @@
 
 me.dir() + "sounds/superball/" => string sb_dir;
 me.dir() + "sounds/trem/" => string trem_dir;
+me.dir() + "sounds/trem_slow/" => string trem_slow_dir;
+
 
 [
 sb_dir + "dehydrator_1.wav",
@@ -20,6 +22,10 @@ trem_dir + "squeezebottle_2.wav",
 trem_dir + "squeezebottle_3.wav"
 ] @=> string tremFiles[];
 
+[
+trem_slow_dir + "squeezebottle_1_25.wav"
+] @=> string tremSlowFiles[];
+
 class CombOptions {
     0.125 => float shiftMin;
     0.5 => float shiftMax;
@@ -29,10 +35,33 @@ class CombOptions {
     
     0.0 => float pan;
     
+    1.0 => float rmix;
+    
     60-12 => float tune1;
     64-12 => float tune2;
     72-12 => float tune3;
-    79-12 => float tune4;
+    79-12 => float tune4;   
+}
+
+fun CombOptions clone(CombOptions orig) {
+    CombOptions clone;
+    
+    orig.shiftMin => clone.shiftMin;
+    orig.shiftMax => clone.shiftMax;
+    
+    orig.rateMin => clone.rateMin;
+    orig.rateMax => clone.rateMax;
+    
+    orig.pan => clone.pan;
+    
+    orig.rmix => clone.rmix;
+    
+    orig.tune1 => clone.tune1;
+    orig.tune2 => clone.tune2;
+    orig.tune3 => clone.tune3;
+    orig.tune4 => clone.tune4;
+    
+    return clone;
 }
 
 fun SndBuf[] getSounds(string filenames[]) {
@@ -58,6 +87,10 @@ fun SndBuf getSound(string filename) {
     return buf;
 }
 
+fun void pitch(CombOptions opt, int p1) {
+    p1 => opt.tune1 => opt.tune2 => opt.tune3 => opt.tune4;
+}
+
 Dyno d1 => dac.left;
 Dyno d2 => dac.right;
 d1.compress();
@@ -80,7 +113,10 @@ fun void playSound(string filename, CombOptions opt) {
     pan.right => d2;
     
     object.feedback( .99 );
+    // object.feedback(0.0);
     0.5 => object.gain;
+    
+    opt.rmix => r.mix;
 
     Math.random2f(-1.0 * opt.pan, opt.pan) => pan.pan; 
     // -1.0 => pan.pan;
@@ -91,6 +127,8 @@ fun void playSound(string filename, CombOptions opt) {
     // Math.random2f(1, 3) => p.shift;
     Math.random2f(opt.rateMin, opt.rateMax) => buf.rate;
     // Math.random2f(0.75, 2) => buf.rate;
+    
+    <<< "rate", buf.rate() >>>;
     
     object.tune(opt.tune1, opt.tune2, opt.tune3, opt.tune4);
     
@@ -103,7 +141,8 @@ fun void playSound(string filename, CombOptions opt) {
         //Math.random2f(.5,1.5) => buf.rate;
         800::ms => now;
         if (maybe) {
-            buf.rate() * 1.0 => buf.rate;
+            buf.rate() * -1.0 => buf.rate;
+            <<< buf.rate() >>>;
         }
     }
     
@@ -127,6 +166,8 @@ fun void playSoundRandSpork(string files[], int count, dur delay, CombOptions op
     playSoundRand(files, count, delay, opt);
     30::second => now;
 }
+
+/*
 
 CombOptions cmaj;
 playSoundRand(superballFiles, 5, 5::second, cmaj);
@@ -201,10 +242,85 @@ spork~ playSoundRandSpork(superballFiles, 5, 1::second, cmaj);
 
 // spork~ playSoundRand(tremFiles, 17, 500::ms, testBottle);
 
+*/
 
+
+
+CombOptions testBottle;
+
+0.0025 => testBottle.rateMin;
+0.1 => testBottle.rateMax;
+
+0.75 => testBottle.rateMin;
+0.95 => testBottle.rateMax;
+
+// 0.75 => testBottle.rateMin => testBottle.rateMax;
+
+
+0.2 => testBottle.shiftMin;
+0.5 => testBottle.shiftMax;
+
+
+// 1 => testBottle.shiftMin => testBottle.shiftMax;
+
+1 => testBottle.rmix;
+
+0.75 => testBottle.pan;
+
+64 => testBottle.tune1 => testBottle.tune2 => testBottle.tune3 => testBottle.tune4;
+
+spork~ playSoundRandSpork(tremFiles, 5, 4::second, testBottle);
+10::second => now;
+spork~ playSoundRandSpork(tremFiles, 5, 2::second, testBottle);
+10::second => now;
+
+
+clone(testBottle) @=> CombOptions cbottle;
+clone(testBottle) @=> CombOptions ebottle;
+clone(testBottle) @=> CombOptions cbottle_1;
+clone(testBottle) @=> CombOptions gbottle;
+
+
+pitch(cbottle, 59);
+pitch(ebottle.tune4);
+
+pitch(cbottle_1, 51);
+pitch(gbottle, 54);
+
+spork~ playSoundRandSpork(tremFiles, 5, 4::second, cbottle);
+
+500::ms => now;
+spork~ playSoundRandSpork(tremFiles, 5, 2::second, ebottle);
+
+500::ms => now;
+spork~ playSoundRandSpork(tremFiles, 5, 2::second, cbottle_1);
+
+clone(testBottle) @=> CombOptions bbottle;
+pitch(bbottle, 70);
+
+10::second => now;
+spork~ playSoundRandSpork(tremFiles, 5, 2::second, bbottle);
+
+4::second => now;
+spork~ playSoundRandSpork(tremFiles, 5, 2::second, gbottle);
+
+clone(testBottle) @=> CombOptions dbottle;
+clone(testBottle) @=> CombOptions fbottle;
+pitch(dbottle,61);
+pitch(fbottle,64);
+
+spork~ playSoundRandSpork(tremFiles, 5, 4::second, dbottle);
+
+500::ms => now;
+spork~ playSoundRandSpork(tremFiles, 5, 2::second, fbottle);
+
+
+10::second => now;
+spork~ playSoundRandSpork(tremFiles, 4, 5::second, cbottle);
 
 
 3::minute => now;
+
 
 // getSounds(superballFiles) @=> SndBuf superball[];
 
