@@ -26,6 +26,7 @@ trem_dir + "squeezebottle_3.wav"
 trem_slow_dir + "squeezebottle_1_25.wav"
 ] @=> string tremSlowFiles[];
 
+/*
 class CombOptions {
     0.125 => float shiftMin;
     0.5 => float shiftMax;
@@ -63,7 +64,7 @@ fun CombOptions clone(CombOptions orig) {
     
     return clone;
 }
-
+*/
 fun SndBuf[] getSounds(string filenames[]) {
     SndBuf sounds[0];
    
@@ -275,14 +276,14 @@ spork~ playSoundRandSpork(tremFiles, 5, 2::second, testBottle);
 10::second => now;
 
 
-clone(testBottle) @=> CombOptions cbottle;
-clone(testBottle) @=> CombOptions ebottle;
-clone(testBottle) @=> CombOptions cbottle_1;
-clone(testBottle) @=> CombOptions gbottle;
+testBottle.clone() @=> CombOptions cbottle;
+testBottle.clone() @=> CombOptions ebottle;
+testBottle.clone() @=> CombOptions cbottle_1;
+testBottle.clone() @=> CombOptions gbottle;
 
 
 pitch(cbottle, 59);
-pitch(ebottle.tune4);
+pitch(ebottle, 63);
 
 pitch(cbottle_1, 51);
 pitch(gbottle, 54);
@@ -295,7 +296,7 @@ spork~ playSoundRandSpork(tremFiles, 5, 2::second, ebottle);
 500::ms => now;
 spork~ playSoundRandSpork(tremFiles, 5, 2::second, cbottle_1);
 
-clone(testBottle) @=> CombOptions bbottle;
+testBottle.clone() @=> CombOptions bbottle;
 pitch(bbottle, 70);
 
 10::second => now;
@@ -304,8 +305,8 @@ spork~ playSoundRandSpork(tremFiles, 5, 2::second, bbottle);
 4::second => now;
 spork~ playSoundRandSpork(tremFiles, 5, 2::second, gbottle);
 
-clone(testBottle) @=> CombOptions dbottle;
-clone(testBottle) @=> CombOptions fbottle;
+testBottle.clone() @=> CombOptions dbottle;
+testBottle.clone() @=> CombOptions fbottle;
 pitch(dbottle,61);
 pitch(fbottle,64);
 
