@@ -92,10 +92,12 @@ fun void pitch(CombOptions opt, int p1) {
     p1 => opt.tune1 => opt.tune2 => opt.tune3 => opt.tune4;
 }
 
+/*
 Dyno d1 => dac.left;
 Dyno d2 => dac.right;
 d1.compress();
 d2.compress();
+*/
 
 // object.feedback( .99 );
 // 0.5 => object.gain;
@@ -105,13 +107,40 @@ d2.compress();
 // tune
 // object.tune( 60+x, 64+x, 72+x, 79+x );
 
+Envelope driver => blackhole;
+1 => driver.value;
+20 => driver.target;
+
+fun void rampDriver() {
+    2::minute => driver.duration;
+    <<< "keyon" >>>;
+    driver.keyOn();
+    2::minute => now;
+    driver.keyOn();
+    2::minute => now;
+}
+
+spork~ rampDriver();
+
 
 fun void playSound(string filename, CombOptions opt) {
     getSound(filename) @=> SndBuf buf;
-    buf => Dyno comp => PitShift p => NRev r => KSChord object => Pan2 pan;
+    buf => Dyno comp => PitShift p => KSChord object => ABSaturator sat => NRev r => Pan2 pan;
+    
+    // nrev before or after kschord?
+    // dyno on or off?
+    
+    <<< "~~~~~~~driver.value()~~~~~~", driver.value() >>>;
+    driver.value() => sat.drive;
+    0.5 => sat.dcOffset;
+    0.25 => sat.gain;
+
     // set pannings
+    /*
     pan.left => d1;
     pan.right => d2;
+    */
+    pan => dac;
     
     object.feedback( .99 );
     // object.feedback(0.0);
@@ -168,7 +197,7 @@ fun void playSoundRandSpork(string files[], int count, dur delay, CombOptions op
     30::second => now;
 }
 
-/*
+
 
 CombOptions cmaj;
 playSoundRand(superballFiles, 5, 5::second, cmaj);
@@ -243,10 +272,9 @@ spork~ playSoundRandSpork(superballFiles, 5, 1::second, cmaj);
 
 // spork~ playSoundRand(tremFiles, 17, 500::ms, testBottle);
 
-*/
 
 
-
+/*
 CombOptions testBottle;
 
 0.0025 => testBottle.rateMin;
@@ -318,7 +346,7 @@ spork~ playSoundRandSpork(tremFiles, 5, 2::second, fbottle);
 
 10::second => now;
 spork~ playSoundRandSpork(tremFiles, 4, 5::second, cbottle);
-
+*/
 
 3::minute => now;
 
